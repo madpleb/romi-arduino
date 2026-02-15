@@ -3,18 +3,11 @@
 #include "Robot.h"
 // #include <Vector.h> 
 
-float readSpeed = 0.001;
-float distFact = 6767; // conversion factor, cm traveled to encoder counts
-const int lPin = 9;  // left motor speed
-const int rPin = 10;  // right motor speed
-const int freq = 1000; 
-
-
-float convertAngle(float angle) {
+float Motion::convertAngle(float angle) {
   return (angle * 8.75/245 * 90/255);
 }
 
-void adjust(bool flip = false) { // set flip to true to adjust when robot is backwards
+void Motion::adjust(bool flip = false) { // set flip to true to adjust when robot is backwards
   float x, y, z;
   int MIN, MAX;
   if (!flip) {
@@ -27,7 +20,7 @@ void adjust(bool flip = false) { // set flip to true to adjust when robot is bac
   }
 
   IMU.readGyroscope(x, y, z);
-  angleSum += convertAngle(z - z0) * readSpeed;
+  angleSum += convertAngle(z - z0) * READ_SPEED;
 
   if (abs(angleSum) > 2) {
     if (angleSum > 0) {
@@ -42,11 +35,11 @@ void adjust(bool flip = false) { // set flip to true to adjust when robot is bac
     }
   }
 
-  delay(readSpeed * 1000);
+  delay(READ_SPEED * 1000);
 
 }
 
-void moveForward(int ls, int rs, int dist) { // left speed, right speed, distance
+void Motion::moveForward(int ls, int rs, int dist) { // left speed, right speed, distance
   float encoderDist;
   startingLeft = currentLeft = ls;
   startingRight = currentRight = rs; 
@@ -54,15 +47,15 @@ void moveForward(int ls, int rs, int dist) { // left speed, right speed, distanc
 
   motors.setSpeeds(ls, rs);
   while (encoderDist <= distFact * dist) {
-    lEncoder = pulseIn(lPin, HIGH);
-    rEncoder = pulseIn(rPin, HIGH);
+    lEncoder = pulseIn(L_PIN, HIGH);
+    rEncoder = pulseIn(R_PIN, HIGH);
     encoderDist += (lEncoder + rEncoder)/2;
     adjust();
   }
   motors.setSpeeds(0, 0);
 }
 
-void moveBackward(int ls, int rs, int dist) {
+void Motion::moveBackward(int ls, int rs, int dist) {
   float encoderDist;
   startingLeft = currentLeft = -ls;
   startingRight = currentRight = -rs; 
@@ -70,49 +63,49 @@ void moveBackward(int ls, int rs, int dist) {
 
   motors.setSpeeds(-ls, -rs);
   while (encoderDist <= distFact * dist) {
-    lEncoder = pulseIn(lPin, HIGH);
-    rEncoder = pulseIn(rPin, HIGH);
+    lEncoder = pulseIn(L_PIN, HIGH);
+    rEncoder = pulseIn(R_PIN, HIGH);
     encoderDist += (lEncoder + rEncoder)/2;
     adjust(true);
   }
   motors.setSpeeds(0, 0);
 }
 
-void turnLeft() {
+void Motion::turnLeft() {
   float x, y, z;
         angleSum = 0;
         motors.setSpeeds(64, 0);
         while (true)
         {
           IMU.readGyroscope(x, y, z);
-            angleSum += (convertAngle(z- z0)) * freq; 
+            angleSum += (convertAngle(z- z0)) * FREQ; 
             if (angleSum <= -87)
             {
                 motors.setSpeeds(0,0);
                 break;
             }
-            delay(freq);
+            delay(FREQ);
         }
 }
 
-void turnRight() {
+void Motion::turnRight() {
         float x, y, z;
         angleSum = 0;
         motors.setSpeeds(64, 0);
         while (true)
         {
           IMU.readGyroscope(x, y, z);
-            angleSum += (convertAngle(z- z0)) * freq; 
+            angleSum += (convertAngle(z- z0)) * FREQ; 
             if (angleSum <= -87)
             {
                 motors.setSpeeds(0,0);
                 break;
             }
-            delay(freq);
+            delay(FREQ);
         }
 }
 
-void stop() {
+void Motion::stop() {
   startingLeft = currentLeft = 0;
   startingRight = currentRight = 0; 
   angleSum = 0;
@@ -120,8 +113,7 @@ void stop() {
   motors.setSpeeds(0, 0);
 }
 
-void startRobot(int arr[]) {
-  int size = sizeof(arr) / sizeof(arr[0]);
+void Motion::startRobot(int arr[], int size) {
   for (int i = 0; i < size; i++) {
     int value = arr[i];
     if (value == 0) 
@@ -135,20 +127,18 @@ void startRobot(int arr[]) {
     else if (value == 2)
       turnRight();
 
-    delay(freq);
+    delay(FREQ);
   }
 
 }
 
-void calibrate(int freq) {
+void Motion::calibrate() {
   float x, y, z;
   float sum = 0; 
-  for (int i = 0; i < freq; i++) {
+  for (int i = 0; i < FREQ; i++) {
     IMU.readGyroscope(x, y, z);
     sum += z;
   }
-  z0 = sum/freq; 
+  z0 = sum/FREQ; 
   delay(1);
 }
-
-

@@ -3,39 +3,41 @@
 #include <Servo.h>
 #include <AStar32U4.h>
 #include <Arduino_LSM6DS3.h>
+#include <Arduino.h>
 #include <stdio.h>
-// #include <Vector.h> 
+// #include <Vector.h>
 
 
-int startingLeft, startingRight;
-int currentLeft, currentRight; // current motor speeds
-
-int lEncoder, rEncoder;
-
-
-float angleSum; 
-float z0;
-
-PololuBuzzer buzzer;
-AStar32U4Motors motors;
-AStar32U4ButtonA buttonA;
-AStar32U4ButtonB buttonB;
-AStar32U4ButtonC buttonC;
+const float READ_SPEED = 0.001;
+const int L_PIN = 9;  // left motor speed
+const int R_PIN = 10;  // right motor speed
+const int FREQ = 1000;
 
 
-float convertAngle(float angle);
 
-void adjust(bool flip = false);
+class Motion 
+{
+  AStar32U4Motors motors;
+  
+  public: 
+    void moveForward(int ls, int rs, int dist);
+    void moveBackward(int ls, int rs, int dist);
+    void turnLeft();
+    void turnRight();
+    void stop();
+    void startRobot(int arr[], int size);
+    void calibrate();
+    float convertAngle(float angle);
 
-void moveForward(int ls, int rs, int dist);
+  private: 
+    void adjust(bool flip = false);
+    int startingLeft, startingRight;
+    int currentLeft, currentRight; // current motor speeds
+    int lEncoder, rEncoder;
+    float angleSum; 
+    float z0;
+    float distFact = 6767; // conversion factor, cm traveled to encoder counts
 
-void moveBackward(int ls, int rs, int dist);
 
-void turnLeft();
+};
 
-void turnRight();
-
-void stop();
-void startRobot(int arr[]);
-
-void calibrate(int freq);

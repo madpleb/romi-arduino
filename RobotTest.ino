@@ -1,19 +1,21 @@
 
 #include "Robot.h"
 
+Motion motion;
 
 void setup() {
+
   Serial.begin(9600);
-
-  pinMode(lPin, OUTPUT);
-  pinMode(rPin, OUTPUT);
+  pinMode(L_PIN, OUTPUT);
+  pinMode(R_PIN, OUTPUT);
   // Play startup sound.
-  calibrate(freq);
-
+  motion.calibrate(); 
 
 }
 
 void loop() {
   int arr[] {50, 25, 2, 2, 0};
-  startRobot(arr);
+  int size = sizeof(arr) / sizeof(arr[0]);
+
+  motion.startRobot(arr, size);
 }

@@ -11,13 +11,14 @@
 const float READ_SPEED = 0.001;
 const int L_PIN = 9;  // left motor speed
 const int R_PIN = 10;  // right motor speed
-const int FREQ = 1000;
+const int FREQ = 1;
 
 
 
 class Motion 
 {
   AStar32U4Motors motors;
+  // AStar32U4Encoders encoders
   
   public: 
     void moveForward(int ls, int rs, int dist);

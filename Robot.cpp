@@ -25,12 +25,12 @@ void Motion::adjust(bool flip = false) { // set flip to true to adjust when robo
   if (abs(angleSum) > 2) {
     if (angleSum > 0) {
       currentLeft = min(MAX, max(currentLeft + 2, MIN));
-      currentRight = min(MAX, max(currentLeft - 2, MIN));
+      currentRight = min(MAX, max(currentRight - 2, MIN));
       motors.setSpeeds(currentLeft, currentRight);
     }
     else {
       currentLeft = min(MAX, max(currentLeft - 2, MIN));
-      currentRight = min(MAX, max(currentLeft + 2, MIN));
+      currentRight = min(MAX, max(currentRight + 2, MIN));
       motors.setSpeeds(currentLeft, currentRight);
     }
   }
@@ -40,17 +40,18 @@ void Motion::adjust(bool flip = false) { // set flip to true to adjust when robo
 }
 
 void Motion::moveForward(int ls, int rs, int dist) { // left speed, right speed, distance
-  float encoderDist;
+  float encoderDist = 0;
   startingLeft = currentLeft = ls;
   startingRight = currentRight = rs; 
   angleSum = 0; // reset angle sum 
 
   motors.setSpeeds(ls, rs);
   while (encoderDist <= distFact * dist) {
-    lEncoder = pulseIn(L_PIN, HIGH);
-    rEncoder = pulseIn(R_PIN, HIGH);
+    // lEncoder = pulseIn(L_PIN, HIGH);
+    // rEncoder = pulseIn(R_PIN, HIGH);
     encoderDist += (lEncoder + rEncoder)/2;
     adjust();
+    delay(FREQ);
   }
   motors.setSpeeds(0, 0);
 }
@@ -63,10 +64,11 @@ void Motion::moveBackward(int ls, int rs, int dist) {
 
   motors.setSpeeds(-ls, -rs);
   while (encoderDist <= distFact * dist) {
-    lEncoder = pulseIn(L_PIN, HIGH);
-    rEncoder = pulseIn(R_PIN, HIGH);
+    // lEncoder = pulseIn(L_PIN, HIGH);
+    // rEncoder = pulseIn(R_PIN, HIGH);
     encoderDist += (lEncoder + rEncoder)/2;
     adjust(true);
+    delay(FREQ);
   }
   motors.setSpeeds(0, 0);
 }
@@ -78,7 +80,7 @@ void Motion::turnLeft() {
         while (true)
         {
           IMU.readGyroscope(x, y, z);
-            angleSum += (convertAngle(z- z0)) * FREQ; 
+            angleSum += (convertAngle(z- z0)) * FREQ/1000; 
             if (angleSum <= -87)
             {
                 motors.setSpeeds(0,0);
@@ -95,7 +97,7 @@ void Motion::turnRight() {
         while (true)
         {
           IMU.readGyroscope(x, y, z);
-            angleSum += (convertAngle(z- z0)) * FREQ; 
+            angleSum += (convertAngle(z- z0)) * FREQ/1000; 
             if (angleSum <= -87)
             {
                 motors.setSpeeds(0,0);

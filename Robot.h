@@ -33,10 +33,9 @@ class Motion
     int lEncoder, rEncoder;
     float angleSum; 
     float z0;
-    float distFact = (M_PI * 16.5) * 1437.09; // conversion factor: cm -> rotations -> encoder counts 
+    float distFact = 1/(M_PI * 16.5) * 1437.09; // conversion factor: cm -> rotations -> encoder counts 
     float READ_SPEED = 0.001;
     int L_PIN = 9;  // left motor speed
     int R_PIN = 10;  // right motor speed
     int FREQ = 100; // take 100 readings to calibrate gyro
 };
-

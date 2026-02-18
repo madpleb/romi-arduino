@@ -26,18 +26,22 @@ void Motion::adjust(bool flip = false) { // set flip to true to adjust when robo
   IMU.readGyroscope(x, y, z);
   angleSum += convertAngle(z - z0) * READ_SPEED;
 
-  if (abs(angleSum) > 2) {
+  if (abs(angleSum) > 5) {
     if (angleSum > 0) {
-      currentLeft = min(MAX, max(currentLeft + 2, MIN));
-      currentRight = min(MAX, max(currentRight - 2, MIN));
+      currentLeft = min(MAX, max(currentLeft + 1, MIN));
+      currentRight = min(MAX, max(currentRight - 1, MIN));
       motors.setSpeeds(currentLeft, currentRight);
-      Serial.println(currentLeft + " " + currentRight);
+      Serial.println(currentLeft); 
+      Serial.print('\t');
+      Serial.print(currentRight);
     }
     else {
-      currentLeft = min(MAX, max(currentLeft - 2, MIN));
-      currentRight = min(MAX, max(currentRight + 2, MIN));
+      currentLeft = min(MAX, max(currentLeft - 1, MIN));
+      currentRight = min(MAX, max(currentRight + 1, MIN));
       motors.setSpeeds(currentLeft, currentRight);
-      Serial.println(currentLeft + " " + currentRight);
+      Serial.println(currentLeft); 
+      Serial.print('\t');
+      Serial.println(currentRight);
     }
   }
   delay(READ_SPEED * 1000);
@@ -146,7 +150,8 @@ void Motion::calibrate() {
   IMU.begin();
   for (int i = 0; i < FREQ; i++) {
     IMU.readGyroscope(x, y, z);
-    sum += z;
+    sum += z * READ_SPEED;
+    delay(READ_SPEED * 1000);
   }
   z0 = sum/FREQ; 
   delay(1000); // wait for gyro to stabilize (allegedly)

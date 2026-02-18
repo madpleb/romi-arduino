@@ -25,24 +25,28 @@ void Motion::adjust(bool flip = false) { // set flip to true to adjust when robo
 
   IMU.readGyroscope(x, y, z);
   angleSum += convertAngle(z - z0) * READ_SPEED;
+  int now = millis();
 
-  if (abs(angleSum) > 5) {
-    if (angleSum > 0) {
-      currentLeft = min(MAX, max(currentLeft + 1, MIN));
-      currentRight = min(MAX, max(currentRight - 1, MIN));
-      motors.setSpeeds(currentLeft, currentRight);
-      Serial.println(currentLeft); 
-      Serial.print('\t');
-      Serial.print(currentRight);
+  if (now - lastAdjustTime > 100) {
+    if (abs(angleSum) > 5) {
+      if (angleSum > 0) {
+        currentLeft = min(MAX, max(currentLeft + 1, MIN));
+        currentRight = min(MAX, max(currentRight - 1, MIN));
+        motors.setSpeeds(currentLeft, currentRight);
+        Serial.println(currentLeft); 
+        Serial.print('\t');
+        Serial.print(currentRight);
+      }
+      else {
+        currentLeft = min(MAX, max(currentLeft - 1, MIN));
+        currentRight = min(MAX, max(currentRight + 1, MIN));
+        motors.setSpeeds(currentLeft, currentRight);
+        Serial.println(currentLeft); 
+        Serial.print('\t');
+        Serial.println(currentRight);
+      }
     }
-    else {
-      currentLeft = min(MAX, max(currentLeft - 1, MIN));
-      currentRight = min(MAX, max(currentRight + 1, MIN));
-      motors.setSpeeds(currentLeft, currentRight);
-      Serial.println(currentLeft); 
-      Serial.print('\t');
-      Serial.println(currentRight);
-    }
+    lastAdjustTime = now;
   }
   delay(READ_SPEED * 1000);
 }

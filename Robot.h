@@ -7,6 +7,7 @@
 #include <Arduino.h>
 #include <stdio.h>
 #include <math.h> // i need pi
+// #include <time.h>
 // #include <Vector.h>
 
 class Motion 
@@ -38,4 +39,5 @@ class Motion
     int L_PIN = 9;  // left motor speed
     int R_PIN = 10;  // right motor speed
     int FREQ = 100; // take 100 readings to calibrate gyro
+    int lastAdjustTime = millis();
 };

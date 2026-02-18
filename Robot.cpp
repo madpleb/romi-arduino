@@ -4,7 +4,11 @@
 // #include <Vector.h> 
 
 float Motion::convertAngle(float angle) {
-  return (angle * 8.75/245 * 90/255);
+  return (angle * 90/33);
+}
+
+float Motion::getz0() {
+  return z0;
 }
 
 void Motion::adjust(bool flip = false) { // set flip to true to adjust when robot is backwards
@@ -27,48 +31,50 @@ void Motion::adjust(bool flip = false) { // set flip to true to adjust when robo
       currentLeft = min(MAX, max(currentLeft + 2, MIN));
       currentRight = min(MAX, max(currentRight - 2, MIN));
       motors.setSpeeds(currentLeft, currentRight);
+      Serial.println(currentLeft + " " + currentRight);
     }
     else {
       currentLeft = min(MAX, max(currentLeft - 2, MIN));
       currentRight = min(MAX, max(currentRight + 2, MIN));
       motors.setSpeeds(currentLeft, currentRight);
+      Serial.println(currentLeft + " " + currentRight);
     }
   }
-
   delay(READ_SPEED * 1000);
-
 }
 
 void Motion::moveForward(int ls, int rs, int dist) { // left speed, right speed, distance
-  float encoderDist = 0;
+  float encoderCount = 0;
   startingLeft = currentLeft = ls;
   startingRight = currentRight = rs; 
   angleSum = 0; // reset angle sum 
 
   motors.setSpeeds(ls, rs);
-  while (encoderDist <= distFact * dist) {
+  while (encoderCount <= distFact * dist) {
     // lEncoder = pulseIn(L_PIN, HIGH);
     // rEncoder = pulseIn(R_PIN, HIGH);
-    encoderDist += (lEncoder + rEncoder)/2;
+    lEncoder = encoders.getCountsAndResetLeft();
+    rEncoder = encoders.getCountsAndResetRight();
+    encoderCount += (lEncoder + rEncoder)/2;
     adjust();
-    delay(FREQ);
   }
   motors.setSpeeds(0, 0);
 }
 
 void Motion::moveBackward(int ls, int rs, int dist) {
-  float encoderDist;
+  float encoderCount = 0;
   startingLeft = currentLeft = -ls;
   startingRight = currentRight = -rs; 
   angleSum = 0;
 
   motors.setSpeeds(-ls, -rs);
-  while (encoderDist <= distFact * dist) {
+  while (encoderCount <= distFact * dist) {
     // lEncoder = pulseIn(L_PIN, HIGH);
     // rEncoder = pulseIn(R_PIN, HIGH);
-    encoderDist += (lEncoder + rEncoder)/2;
+    lEncoder = encoders.getCountsAndResetLeft();
+    rEncoder = encoders.getCountsAndResetRight();
+    encoderCount += (lEncoder + rEncoder)/2;
     adjust(true);
-    delay(FREQ);
   }
   motors.setSpeeds(0, 0);
 }
@@ -80,13 +86,13 @@ void Motion::turnLeft() {
         while (true)
         {
           IMU.readGyroscope(x, y, z);
-            angleSum += (convertAngle(z- z0)) * FREQ/1000; 
+            angleSum += (convertAngle(z- z0)) * READ_SPEED; 
             if (angleSum <= -87)
             {
                 motors.setSpeeds(0,0);
                 break;
             }
-            delay(FREQ);
+            delay(READ_SPEED * 1000);
         }
 }
 
@@ -97,13 +103,13 @@ void Motion::turnRight() {
         while (true)
         {
           IMU.readGyroscope(x, y, z);
-            angleSum += (convertAngle(z- z0)) * FREQ/1000; 
+            angleSum += (convertAngle(z- z0)) * READ_SPEED; 
             if (angleSum <= -87)
             {
                 motors.setSpeeds(0,0);
                 break;
             }
-            delay(FREQ);
+            delay(READ_SPEED * 1000);
         }
 }
 
@@ -129,7 +135,7 @@ void Motion::startRobot(int arr[], int size) {
     else if (value == 2)
       turnRight();
 
-    delay(FREQ);
+    delay(READ_SPEED * 1000);
   }
 
 }
@@ -137,10 +143,11 @@ void Motion::startRobot(int arr[], int size) {
 void Motion::calibrate() {
   float x, y, z;
   float sum = 0; 
+  IMU.begin();
   for (int i = 0; i < FREQ; i++) {
     IMU.readGyroscope(x, y, z);
     sum += z;
   }
   z0 = sum/FREQ; 
-  delay(1);
+  delay(1000); // wait for gyro to stabilize (allegedly)
 }

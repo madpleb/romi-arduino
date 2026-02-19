@@ -15,6 +15,8 @@ class Motion
   // AStar32U4Motors motors;
   Romi32U4Motors motors;
   Romi32U4Encoders encoders;
+  Romi32U4ButtonA buttonA;
+
   
   public: 
     void moveForward(int ls, int rs, int dist);
@@ -24,6 +26,7 @@ class Motion
     void stop();
     void startRobot(int arr[], int size);
     void calibrate();
+    void wait();
     float convertAngle(float angle);
     float getz0();
 
@@ -38,6 +41,6 @@ class Motion
     float READ_SPEED = 0.001;
     int L_PIN = 9;  // left motor speed
     int R_PIN = 10;  // right motor speed
-    int FREQ = 100; // take 100 readings to calibrate gyro
-    int lastAdjustTime = millis();
+    int FREQ = 2000; // take 2000 readings to calibrate gyro
+    float lastAdjustTime = millis()/1000;
 };

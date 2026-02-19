@@ -4,42 +4,55 @@
 // #include <Vector.h> 
 
 float Motion::convertAngle(float angle) {
-  return (angle * 90/33);
+  return (angle * 90/32);
 }
 
 float Motion::getz0() {
   return z0;
 }
 
+void Motion::wait() {
+  while (true) {
+    if (buttonA.isPressed()) {
+      ledRed(1);
+      ledGreen(1);
+      break;
+    }
+    delay(1);
+  }
+}
+
 void Motion::adjust(bool flip = false) { // set flip to true to adjust when robot is backwards
   float x, y, z;
-  int MIN, MAX;
+  int MIN, MAX, ADJUST_FACTOR;
   if (!flip) {
      MIN = 50; 
      MAX = 120;
+     ADJUST_FACTOR = 1;
   }
   else {
      MIN = -120;
      MAX = -50;
+     ADJUST_FACTOR = 1;
   }
 
   IMU.readGyroscope(x, y, z);
   angleSum += convertAngle(z - z0) * READ_SPEED;
-  int now = millis();
+  float now = millis()/1000;
 
-  if (now - lastAdjustTime > 100) {
-    if (abs(angleSum) > 5) {
+  if (now - lastAdjustTime > 0.01) {
+    if (abs(angleSum) > 2) {
       if (angleSum > 0) {
-        currentLeft = min(MAX, max(currentLeft + 1, MIN));
-        currentRight = min(MAX, max(currentRight - 1, MIN));
+        currentLeft = min(MAX, max(currentLeft + ADJUST_FACTOR, MIN));
+        currentRight = min(MAX, max(currentRight - ADJUST_FACTOR, MIN));
         motors.setSpeeds(currentLeft, currentRight);
         Serial.println(currentLeft); 
         Serial.print('\t');
         Serial.print(currentRight);
       }
       else {
-        currentLeft = min(MAX, max(currentLeft - 1, MIN));
-        currentRight = min(MAX, max(currentRight + 1, MIN));
+        currentLeft = min(MAX, max(currentLeft - ADJUST_FACTOR, MIN));
+        currentRight = min(MAX, max(currentRight + ADJUST_FACTOR, MIN));
         motors.setSpeeds(currentLeft, currentRight);
         Serial.println(currentLeft); 
         Serial.print('\t');
@@ -76,7 +89,7 @@ void Motion::moveBackward(int ls, int rs, int dist) {
   angleSum = 0;
 
   motors.setSpeeds(-ls, -rs);
-  while (encoderCount <= distFact * dist) {
+  while (-encoderCount <= distFact * dist) {
     // lEncoder = pulseIn(L_PIN, HIGH);
     // rEncoder = pulseIn(R_PIN, HIGH);
     lEncoder = encoders.getCountsAndResetLeft();
@@ -89,36 +102,34 @@ void Motion::moveBackward(int ls, int rs, int dist) {
 
 void Motion::turnLeft() {
   float x, y, z;
-        angleSum = 0;
-        motors.setSpeeds(64, 0);
-        while (true)
-        {
-          IMU.readGyroscope(x, y, z);
-            angleSum += (convertAngle(z- z0)) * READ_SPEED; 
-            if (angleSum <= -87)
-            {
-                motors.setSpeeds(0,0);
-                break;
-            }
-            delay(READ_SPEED * 1000);
-        }
+  motors.setSpeeds(0, 61);
+  while (true)
+  {
+    IMU.readGyroscope(x, y, z);
+    angleSum += (convertAngle(z - z0)) * READ_SPEED; 
+    if (angleSum >= 105)
+    {
+      motors.setSpeeds(0,0);
+      break;
+    }
+    delay(READ_SPEED * 1000);
+  }
 }
 
 void Motion::turnRight() {
-        float x, y, z;
-        angleSum = 0;
-        motors.setSpeeds(64, 0);
-        while (true)
-        {
-          IMU.readGyroscope(x, y, z);
-            angleSum += (convertAngle(z- z0)) * READ_SPEED; 
-            if (angleSum <= -87)
-            {
-                motors.setSpeeds(0,0);
-                break;
-            }
-            delay(READ_SPEED * 1000);
-        }
+  float x, y, z;
+  motors.setSpeeds(100, 0);
+  while (true)
+  {
+    IMU.readGyroscope(x, y, z);
+    angleSum += (convertAngle(z- z0)) * READ_SPEED; 
+    if (angleSum <= -105)
+    {
+      motors.setSpeeds(0,0);
+      break;
+    }
+    delay(READ_SPEED * 1000);
+  }
 }
 
 void Motion::stop() {
@@ -130,6 +141,7 @@ void Motion::stop() {
 }
 
 void Motion::startRobot(int arr[], int size) {
+  // int size = sizeof(arr) / sizeof(arr[0]);
   for (int i = 0; i < size; i++) {
     int value = arr[i];
     if (value == 0) 
@@ -142,8 +154,9 @@ void Motion::startRobot(int arr[], int size) {
       turnLeft();
     else if (value == 2)
       turnRight();
-
-    delay(READ_SPEED * 1000);
+    
+    angleSum = 0;
+    delay(1000); // delay after every action
   }
 
 }
@@ -154,9 +167,12 @@ void Motion::calibrate() {
   IMU.begin();
   for (int i = 0; i < FREQ; i++) {
     IMU.readGyroscope(x, y, z);
-    sum += z * READ_SPEED;
+    sum += z;
     delay(READ_SPEED * 1000);
   }
   z0 = sum/FREQ; 
   delay(1000); // wait for gyro to stabilize (allegedly)
+  ledRed(0);
+  ledYellow(0);
+  ledGreen(0);
 }

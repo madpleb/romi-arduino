@@ -40,7 +40,7 @@ void Motion::adjust(bool flip = false) { // set flip to true to adjust when robo
   angleSum += convertAngle(z - z0) * READ_SPEED;
   float now = millis()/1000;
 
-  if (now - lastAdjustTime > 0.01) {
+  if (now - lastAdjustTime >= 0.01) { // can only adjust every 0.01 seconds
     if (abs(angleSum) > 2) {
       if (angleSum > 0) {
         currentLeft = min(MAX, max(currentLeft + ADJUST_FACTOR, MIN));
@@ -64,14 +64,47 @@ void Motion::adjust(bool flip = false) { // set flip to true to adjust when robo
   delay(READ_SPEED * 1000);
 }
 
+// void Motion::slowStop(int dist, int encoderTotal) {
+//   int count = 0;
+//   int encoderCount = encoderTotal;
+//   while (currentLeft >= 40 && currentRight >= 40) {
+//     count = count + 1;
+//     if (count % 50 == 0) { // motor speed decreases every 0.01 seconds
+//       currentLeft = currentLeft - 3;
+//       currentRight = currentRight - 3;
+//       motors.setSpeeds(currentLeft, currentRight); // decrease motor speed by 3 
+//     }
+//     lEncoder = encoders.getCountsAndResetLeft();
+//     rEncoder = encoders.getCountsAndResetRight();
+//     encoderCount += (lEncoder + rEncoder)/2;
+//     delay(1);
+//     // adjust();
+//   }
+//   // currentLeft = currentRight = 40;
+//   // motors.setSpeeds(40, 40);
+//   while (true) {
+//     Serial.println(encoderCount / 1437.09 * (M_PI * 7));
+//     lEncoder = encoders.getCountsAndResetLeft();
+//     rEncoder = encoders.getCountsAndResetRight();
+//     encoderCount += (lEncoder + rEncoder)/2;
+//     if (encoderCount >= distFact * (dist)) 
+//       break;
+//     delay(1);
+//     // adjust();
+//   }
+//   motors.setSpeeds(0, 0);
+//   // stop();
+// }
+
 void Motion::moveForward(int ls, int rs, int dist) { // left speed, right speed, distance
-  float encoderCount = 0;
+  int encoderCount = 0;
   startingLeft = currentLeft = ls;
   startingRight = currentRight = rs; 
   angleSum = 0; // reset angle sum 
 
   motors.setSpeeds(ls, rs);
-  while (encoderCount <= distFact * dist) {
+  while (encoderCount <= distFact * (dist)) {
+    // Serial.println(encoderCount / 1437.09 * (M_PI * 7));
     // lEncoder = pulseIn(L_PIN, HIGH);
     // rEncoder = pulseIn(R_PIN, HIGH);
     lEncoder = encoders.getCountsAndResetLeft();
@@ -79,11 +112,12 @@ void Motion::moveForward(int ls, int rs, int dist) { // left speed, right speed,
     encoderCount += (lEncoder + rEncoder)/2;
     adjust();
   }
+  // slowStop(dist, encoderCount);
   motors.setSpeeds(0, 0);
 }
 
 void Motion::moveBackward(int ls, int rs, int dist) {
-  float encoderCount = 0;
+  int encoderCount = 0;
   startingLeft = currentLeft = -ls;
   startingRight = currentRight = -rs; 
   angleSum = 0;
@@ -102,12 +136,12 @@ void Motion::moveBackward(int ls, int rs, int dist) {
 
 void Motion::turnLeft() {
   float x, y, z;
-  motors.setSpeeds(0, 61);
+  motors.setSpeeds(0, 70);
   while (true)
   {
     IMU.readGyroscope(x, y, z);
     angleSum += (convertAngle(z - z0)) * READ_SPEED; 
-    if (angleSum >= 105)
+    if (angleSum >= 103)
     {
       motors.setSpeeds(0,0);
       break;
@@ -118,12 +152,12 @@ void Motion::turnLeft() {
 
 void Motion::turnRight() {
   float x, y, z;
-  motors.setSpeeds(100, 0);
+  motors.setSpeeds(70, 0);
   while (true)
   {
     IMU.readGyroscope(x, y, z);
     angleSum += (convertAngle(z- z0)) * READ_SPEED; 
-    if (angleSum <= -105)
+    if (angleSum <= -103)
     {
       motors.setSpeeds(0,0);
       break;
@@ -146,10 +180,10 @@ void Motion::startRobot(int arr[], int size) {
     int value = arr[i];
     if (value == 0) 
       stop();
-    else if (value == 25)
-      moveForward(77, 75, 25);
-    else if (value == 50)
-      moveForward(77, 75, 50);
+    else if (value >= 25)
+      moveForward(77, 75, value); // covers all possible distances the robot has to move forward
+    else if (value <= -25)
+      moveBackward(77, 75, -value);
     else if (value == 1)
       turnLeft();
     else if (value == 2)
@@ -158,7 +192,6 @@ void Motion::startRobot(int arr[], int size) {
     angleSum = 0;
     delay(1000); // delay after every action
   }
-
 }
 
 void Motion::calibrate() {

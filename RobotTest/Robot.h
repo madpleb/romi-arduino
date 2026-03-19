@@ -38,7 +38,8 @@ class Motion
     int lEncoder, rEncoder;
     float angleSum; 
     float z0;
-    float distFact = 1/(M_PI * 7) * 1437.09 * 0.9409; // conversion factor: cm -> rotations -> encoder counts 
+    float distFact = 1/(M_PI * 7) * 1437.09; // conversion factor: cm -> rotations -> encoder counts 
+    // float distFact = 1/(M_PI * 7) * 1437.09 * 150/158; // conversion factor: cm -> rotations -> encoder counts 
     float READ_SPEED = 0.001;
     int L_PIN = 9;  // left motor speed
     int R_PIN = 10;  // right motor speed

@@ -39,7 +39,8 @@ void Motion::adjust(bool flip = false) { // set flip to true to adjust when robo
   angleSum += convertAngle(z - z0) * READ_SPEED;
   float now = millis()/1000;
 
-  if (now - lastAdjustTime >= 0.25) { // can only adjust every x seconds
+  if (now - lastAdjustTime >= 0.10) { // can only adjust every x seconds
+  // if (now - lastAdjustTime >= 0.25) { // can only adjust every x seconds
     if (abs(angleSum) > 2) {
       if (angleSum > 0) {
         currentLeft = min(MAX, max(currentLeft + ADJUST_FACTOR, MIN));

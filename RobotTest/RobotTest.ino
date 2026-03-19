@@ -7,7 +7,8 @@ void setup() {
   Serial.begin(9600);
   motion.wait();
   motion.calibrate();
-  motion.moveForward(102, 100, 150);
+  motion.moveForward(50, 50, 150);
+  // motion.moveForward(102, 100, 150);
   // motion.moveBackward(100, 100, 200);
   // motion.turnRight();
   // motion.turnLeft();
@@ -20,4 +21,4 @@ void setup() {
 }
 
 void loop() {
-}
+} 

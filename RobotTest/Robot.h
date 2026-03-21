@@ -25,6 +25,7 @@ class Motion
     void turnLeft();
     void turnRight();
     void stop();
+    void setStartSpeeds(int ls, int rs);
     void startRobot(int arr[], int size);
     void calibrate();
     void wait();
@@ -36,6 +37,7 @@ class Motion
     int startingLeft, startingRight;
     int currentLeft, currentRight; // current motor speeds
     int lEncoder, rEncoder;
+    int left, right;
     float angleSum; 
     float z0;
     float distFact = 1/(M_PI * 7) * 1437.09; // conversion factor: cm -> rotations -> encoder counts 
@@ -44,5 +46,6 @@ class Motion
     int L_PIN = 9;  // left motor speed
     int R_PIN = 10;  // right motor speed
     int FREQ = 2000; // take 2000 readings to calibrate gyro
+    float adjustInterval = 0.1;
     float lastAdjustTime = millis()/1000;
 };

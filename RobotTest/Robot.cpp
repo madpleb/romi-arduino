@@ -39,7 +39,7 @@ void Motion::adjust(bool flip = false) { // set flip to true to adjust when robo
   angleSum += convertAngle(z - z0) * READ_SPEED;
   float now = millis()/1000;
 
-  if (now - lastAdjustTime >= 0.10) { // can only adjust every x seconds
+  if (now - lastAdjustTime >= adjustInterval) { // can only adjust every x seconds
   // if (now - lastAdjustTime >= 0.25) { // can only adjust every x seconds
     if (abs(angleSum) > 2) {
       if (angleSum > 0) {
@@ -63,38 +63,6 @@ void Motion::adjust(bool flip = false) { // set flip to true to adjust when robo
   }
   delay(READ_SPEED * 1000);
 }
-
-// void Motion::slowStop(int dist, int encoderTotal) {
-//   int count = 0;
-//   int encoderCount = encoderTotal;
-//   while (currentLeft >= 40 && currentRight >= 40) {
-//     count = count + 1;
-//     if (count % 50 == 0) { // motor speed decreases every 0.01 seconds
-//       currentLeft = currentLeft - 3;
-//       currentRight = currentRight - 3;
-//       motors.setSpeeds(currentLeft, currentRight); // decrease motor speed by 3 
-//     }
-//     lEncoder = encoders.getCountsAndResetLeft();
-//     rEncoder = encoders.getCountsAndResetRight();
-//     encoderCount += (lEncoder + rEncoder)/2;
-//     delay(1);
-//     // adjust();
-//   }
-//   // currentLeft = currentRight = 40;
-//   // motors.setSpeeds(40, 40);
-//   while (true) {
-//     Serial.println(encoderCount / 1437.09 * (M_PI * 7));
-//     lEncoder = encoders.getCountsAndResetLeft();
-//     rEncoder = encoders.getCountsAndResetRight();
-//     encoderCount += (lEncoder + rEncoder)/2;
-//     if (encoderCount >= distFact * (dist)) 
-//       break;
-//     delay(1);
-//     // adjust();
-//   }
-//   motors.setSpeeds(0, 0);
-//   // stop();
-// }
 
 void Motion::moveForward(int ls, int rs, int dist) { // left speed, right speed, distance
   int encoderCount = 0;
@@ -174,6 +142,20 @@ void Motion::stop() {
   motors.setSpeeds(0, 0);
 }
 
+void Motion::setStartSpeeds(int ls, int rs) {
+  left = ls;
+  right = rs;
+  if (ls < 60) 
+    distFact = 1/(M_PI * 7) * 1437.09 * 0.8287292818;
+  else if (ls < 85)
+    distFact = 1/(M_PI * 7) * 1437.09 * 0.9165045638;
+  else if (ls < 110) {
+    distFact = 1/(M_PI * 7) * 1437.09 * 0.9493670886;
+    adjustInterval = 0.25;
+  }
+  adjustInterval = 0.1;
+}
+
 void Motion::startRobot(int arr[], int size) {
   // int size = sizeof(arr) / sizeof(arr[0]);
   for (int i = 0; i < size; i++) {
@@ -181,9 +163,9 @@ void Motion::startRobot(int arr[], int size) {
     if (value == 0) 
       stop();
     else if (value >= 25)
-      moveForward(77, 75, value); // covers all possible distances the robot has to move forward
+      moveForward(left, right, value); // covers all possible distances the robot has to move forward
     else if (value <= -25)
-      moveBackward(77, 75, -value);
+      moveBackward(left, right, -value);
     else if (value == 1)
       turnLeft();
     else if (value == 2)
@@ -203,7 +185,7 @@ void Motion::calibrate() {
     sum += z;
     delay(READ_SPEED * 1000);
   }
-  z0 = sum/FREQ; 
+  z0 = sum/FREQ - 0.01; 
   delay(1000); // wait for gyro to stabilize (allegedly)
   ledRed(0);
   ledYellow(0);
